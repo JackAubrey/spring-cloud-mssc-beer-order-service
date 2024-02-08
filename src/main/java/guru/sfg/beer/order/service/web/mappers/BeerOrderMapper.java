@@ -21,13 +21,14 @@ import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.web.model.BeerOrderDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 
 @Mapper(uses = {DateMapper.class, BeerOrderLineMapper.class}, componentModel = "spring")
 public interface BeerOrderMapper {
 
-    @Mapping(target = "customerId", ignore = true)
+    @Mapping(target = "customerId", source = "customer.id")
     BeerOrderDto beerOrderToDto(BeerOrder beerOrder);
 
-    @Mapping(target = "customer", ignore = true)
+    @Mapping(target = "customer.id", source = "customerId")
     BeerOrder dtoToBeerOrder(BeerOrderDto dto);
 }
