@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(uses = {DateMapper.class}, componentModel = "spring")
 public interface BeerOrderLineMapper {
-    @Mapping(target = "upc", ignore = true)
+
     @Mapping(target = "beerName", ignore = true)
     BeerOrderLineDto beerOrderLineToDto(BeerOrderLine line);
 
