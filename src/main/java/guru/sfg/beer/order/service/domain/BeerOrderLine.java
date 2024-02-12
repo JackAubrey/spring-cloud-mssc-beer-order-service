@@ -16,13 +16,14 @@
  */
 package guru.sfg.beer.order.service.domain;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -50,6 +51,7 @@ public class BeerOrderLine extends BaseEntity {
     @ManyToOne
     private BeerOrder beerOrder;
 
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID beerId;
     private String upc;
     private Integer orderQuantity = 0;
