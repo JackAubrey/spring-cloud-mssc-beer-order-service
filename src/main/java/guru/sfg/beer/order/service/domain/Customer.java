@@ -22,7 +22,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 import java.sql.Timestamp;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class Customer extends BaseEntity {
 
     private String customerName;
 
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
+    @JdbcType(VarcharJdbcType.class)
     private UUID apiKey;
 
     @OneToMany(mappedBy = "customer")
