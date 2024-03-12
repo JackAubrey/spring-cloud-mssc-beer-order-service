@@ -18,10 +18,9 @@
 package guru.sfg.beer.order.service.web.mappers;
 
 import guru.sfg.beer.order.service.domain.BeerOrder;
-import guru.sfg.beer.order.service.web.model.BeerOrderDto;
+import guru.sfg.brewery.model.BeerOrderDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 @Mapper(uses = {DateMapper.class, BeerOrderLineMapper.class}, componentModel = "spring")
 public interface BeerOrderMapper {
