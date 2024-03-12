@@ -11,6 +11,8 @@ import org.mapstruct.Mapping;
 public interface BeerOrderLineMapper {
 
     @Mapping(target = "beerName", ignore = true)
+    @Mapping(target = "beerStyle", ignore = true)
+    @Mapping(target = "price", ignore = true)
     BeerOrderLineDto beerOrderLineToDto(BeerOrderLine line);
 
     @Mapping(target = "beerOrder", ignore = true)
