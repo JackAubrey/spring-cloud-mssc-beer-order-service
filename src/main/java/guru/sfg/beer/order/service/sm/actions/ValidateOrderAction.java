@@ -14,6 +14,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -27,7 +28,8 @@ public class ValidateOrderAction extends AbstractActionSupport {
     @Override
     public void execute(StateContext<BeerOrderStatusEnum, BeerOrderEventEnum> stateContext) {
         log.debug("VALIDATE ORDER ACTION | START");
-        String orderId = (String)stateContext.getMessage().getHeaders().get(BeerOrderManager.ORDER_ID_HEADER);
+        String orderId = Optional.ofNullable((String)stateContext.getMessage().getHeaders().get(BeerOrderManager.ORDER_ID_HEADER))
+                        .orElseThrow( () -> new IllegalArgumentException("No Order ID header found on message context"));
         log.debug("VALIDATE ORDER ACTION | Retrieving BeerOrderId {}", orderId);
         BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
         ValidateBeerOrderRequest request = ValidateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
