@@ -33,10 +33,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         return savedOrder;
     }
 
-    private StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum beerOrderEvent) {
+    private void sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum beerOrderEvent) {
         StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm = build(beerOrder);
         sendEvent(beerOrder, sm, beerOrderEvent);
-        return sm;
     }
 
     private void sendEvent(BeerOrder beerOrder, StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm, BeerOrderEventEnum event) {
