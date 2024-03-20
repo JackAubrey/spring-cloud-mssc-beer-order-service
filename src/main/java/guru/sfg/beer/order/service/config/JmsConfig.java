@@ -8,8 +8,7 @@ import org.springframework.jms.support.converter.MessageType;
 
 @Configuration
 public class JmsConfig {
-    public static final String QUEUE_NAME = "hello-world-queue";
-    public static final String QUEUE_SR_NAME = "replay-back-here-queue";
+    public static final String VALIDATE_ORDER_QUEUE = "validate-order";
 
     @Bean
     public MessageConverter messageConverter() {
