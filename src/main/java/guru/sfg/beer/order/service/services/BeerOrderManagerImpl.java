@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -27,11 +29,24 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     @Override
     @Transactional
     public BeerOrder newBeerOrder(BeerOrder beerOrder) {
+        log.info("Saving new BeerOrder");
         beerOrder.setId(null);
         beerOrder.setOrderStatus(BeerOrderStatusEnum.NEW);
         BeerOrder savedOrder = beerOrderRepository.save(beerOrder);
         sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATE_ORDER);
         return savedOrder;
+    }
+
+    @Override
+    @Transactional
+    public void processValidationResult(UUID orderId, Boolean isValid) {
+        BeerOrder beerOrder = beerOrderRepository.getReferenceById(orderId);
+
+        if( Boolean.TRUE.equals(isValid) ) {
+            sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_SUCCESS);
+        } else {
+            sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
+        }
     }
 
     private void sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum beerOrderEvent) {
@@ -40,6 +55,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     }
 
     private void sendEvent(BeerOrder beerOrder, StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> sm, BeerOrderEventEnum event) {
+        log.debug("Sending StateMachine Event | BeerOrder ID {} | Event {}", beerOrder.getId(), event);
         Message<BeerOrderEventEnum> msg = MessageBuilder.withPayload(event)
                 .setHeader(ORDER_ID_HEADER, beerOrder.getId().toString())
                 .build();
