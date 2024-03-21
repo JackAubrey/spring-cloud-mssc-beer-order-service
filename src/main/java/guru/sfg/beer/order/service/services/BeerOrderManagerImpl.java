@@ -50,6 +50,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         beerOrderOptional.ifPresentOrElse(beerOrder -> {
             if( Boolean.TRUE.equals(isValid) ) {
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_SUCCESS);
+
+                BeerOrder validatedOrder = beerOrderRepository.getReferenceById(beerOrderId);
+                sendBeerOrderEvent(validatedOrder, BeerOrderEventEnum.ALLOCATE_ORDER);
             } else {
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
             }
@@ -166,7 +169,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                 .setHeader(ORDER_ID_HEADER, beerOrder.getId().toString())
                 .build();
 
-        sm.sendEvent(Mono.just(msg)).subscribe();
+        sm.sendEvent(Mono.just(msg)).subscribe(c -> log.debug("State Machine SendEvent Consume"), e -> log.error("State Machine SendEvent Consume Error:", e));
     }
 
     private StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> build(BeerOrder beerOrder) {
@@ -177,7 +180,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             sma.resetStateMachineReactively(new DefaultStateMachineContext<>(beerOrder.getOrderStatus(), null, null, null)).subscribe();
         });
 
-        stateMachine.startReactively().subscribe();
+        stateMachine.startReactively().subscribe(c -> log.debug("State Machine Build Consume"), e -> log.error("State Machine Build Consume Error:", e));
 
         return stateMachine;
     }
