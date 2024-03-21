@@ -33,14 +33,12 @@ public class AllocateOrderAction extends AbstractActionSupport {
                         .orElseThrow( () -> new IllegalArgumentException("No Order ID header found on message context"));
         log.debug("ALLOCATE ORDER ACTION | Retrieving BeerOrderId {}", orderId);
         BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
+
         AllocateBeerOrderRequest request = AllocateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
-        log.debug("ALLOCATE ORDER ACTION | Sending StateMachine ALLOCATE_ORDER Event for BeerOrderId {}", orderId);
-        sendEvent(stateContext, BeerOrderEventEnum.ALLOCATE_ORDER)
-                .doOnComplete( () -> {
-                    log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
-                    jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_QUEUE, request);
-                    log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
-                }).subscribe();
+        log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
+        jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_QUEUE, request);
+        log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+
         log.debug("ALLOCATE ORDER ACTION | END");
     }
 }

@@ -32,14 +32,12 @@ public class ValidateOrderAction extends AbstractActionSupport {
                         .orElseThrow( () -> new IllegalArgumentException("No Order ID header found on message context"));
         log.debug("VALIDATE ORDER ACTION | Retrieving BeerOrderId {}", orderId);
         BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
+
         ValidateBeerOrderRequest request = ValidateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
-        log.debug("VALIDATE ORDER ACTION | Sending StateMachine VALIDATE_ORDER Event for BeerOrderId {}", orderId);
-        sendEvent(stateContext, BeerOrderEventEnum.VALIDATE_ORDER)
-                .doOnComplete( () -> {
-                    log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
-                    jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_QUEUE, request);
-                    log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
-                }).subscribe();
+        log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
+        jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_QUEUE, request);
+        log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+
         log.debug("VALIDATE ORDER ACTION | END");
     }
 }
