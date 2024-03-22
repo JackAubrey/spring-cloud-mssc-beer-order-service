@@ -87,9 +87,8 @@ class BeerOrderManagerImplIT {
 
         assertNotNull(savedBeerOrder2);
         assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder2.getOrderStatus());
-        savedBeerOrder2.getBeerOrderLines().forEach(line -> {
-            assertEquals(line.getOrderQuantity(), line.getQuantityAllocated());
-        });
+        savedBeerOrder2.getBeerOrderLines().forEach(line ->
+                assertEquals(line.getOrderQuantity(), line.getQuantityAllocated()));
 
         wireMock.verify(2, getRequestedFor( urlEqualTo(BeerServiceImpl.BEER_BY_UPC_SERVICE_PATH+UPC) ));
     }
