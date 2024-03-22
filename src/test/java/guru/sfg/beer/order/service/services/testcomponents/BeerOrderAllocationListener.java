@@ -17,9 +17,8 @@ public class BeerOrderAllocationListener {
     @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_QUEUE)
     void listen(AllocateBeerOrderRequest request) {
         log.info("Received Allocation Order Request: {}", request);
-        request.getBeerOrderDto().getBeerOrderLines().forEach(beerOrderLineDto -> {
-            beerOrderLineDto.setQuantityAllocated(beerOrderLineDto.getOrderQuantity());
-        });
+        request.getBeerOrderDto().getBeerOrderLines().forEach(beerOrderLineDto ->
+                beerOrderLineDto.setQuantityAllocated(beerOrderLineDto.getOrderQuantity()));
 
         jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_RESPONSE_QUEUE,
                 AllocateBeerOrderResult.builder()
