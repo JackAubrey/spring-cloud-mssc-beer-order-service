@@ -174,10 +174,11 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     private StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> build(BeerOrder beerOrder) {
         StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachine = stateMachineFactory.getStateMachine(beerOrder.getId().toString());
-        stateMachine.stopReactively().subscribe();
+        stateMachine.stopReactively().subscribe(c -> log.debug("State Machine Build Consume"), e -> log.error("State Machine Build Consume Error:", e));
         stateMachine.getStateMachineAccessor().doWithAllRegions(sma -> {
             sma.addStateMachineInterceptor(interceptor);
-            sma.resetStateMachineReactively(new DefaultStateMachineContext<>(beerOrder.getOrderStatus(), null, null, null)).subscribe();
+            sma.resetStateMachineReactively(new DefaultStateMachineContext<>(beerOrder.getOrderStatus(), null, null, null))
+                    .subscribe(c -> log.debug("State Machine Build ResetState"), e -> log.error("State Machine Build ResetState Error:", e));
         });
 
         stateMachine.startReactively().subscribe(c -> log.debug("State Machine Build Consume"), e -> log.error("State Machine Build Consume Error:", e));
