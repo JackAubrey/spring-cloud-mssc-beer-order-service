@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -44,7 +45,7 @@ class BeerOrderManagerImplIT {
     @RegisterExtension
     static WireMockExtension wireMock = WireMockExtension
             .newInstance()
-            .options(wireMockConfig().port(8083))
+            .options( wireMockConfig().port(8083) )
             .build();
 
     Customer testCustomer;
@@ -60,7 +61,6 @@ class BeerOrderManagerImplIT {
     @Test
     void testNewToAllocated() throws JsonProcessingException {
         BeerDto beerDto = BeerDto.builder().id(beerId).upc(UPC).build();
-        //BeerPagedList list = new BeerPagedList(List.of(beerDto));
 
         wireMock.stubFor(get(BeerServiceImpl.BEER_BY_UPC_SERVICE_PATH+UPC)
                 .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
@@ -69,6 +69,13 @@ class BeerOrderManagerImplIT {
 
         BeerOrder savedBeerOrder = beerOrderManager.newBeerOrder(beerOrder);
 
+        await().untilAsserted( () -> {
+            BeerOrder found = beerOrderRepository.findById(savedBeerOrder.getId()).get();
+
+            assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, found.getOrderStatus());
+        });
+
+        wireMock.verify(2, getRequestedFor( urlEqualTo(BeerServiceImpl.BEER_BY_UPC_SERVICE_PATH+UPC) ));
         assertNotNull(savedBeerOrder);
         assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder.getOrderStatus());
     }
