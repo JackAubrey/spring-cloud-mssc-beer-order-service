@@ -1,6 +1,5 @@
 package guru.sfg.beer.order.service.sm;
 
-import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
@@ -33,9 +32,12 @@ public class BeerOrderStateChangeInterceptor extends StateMachineInterceptorAdap
                 .flatMap(msg -> Optional.ofNullable((String)message.getHeaders().getOrDefault(BeerOrderManager.ORDER_ID_HEADER, null)) )
                         .ifPresent(orderId -> {
                             log.debug("Saving state for BeerOrder ID {} and Status {}", orderId, state.getId());
-                            BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
-                            beerOrder.setOrderStatus(state.getId());
-                            beerOrderRepository.saveAndFlush(beerOrder);
+                            beerOrderRepository.findById(UUID.fromString(orderId))
+                                    .ifPresentOrElse(beerOrder -> {
+                                        beerOrder.setOrderStatus(state.getId());
+                                        beerOrderRepository.saveAndFlush(beerOrder);
+                                    }, () -> log.error("Unable to load BeerOrder by Id {}", orderId));
+
                         });
     }
 }
