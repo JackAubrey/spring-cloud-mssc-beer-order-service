@@ -11,6 +11,7 @@ import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.repositories.CustomerRepository;
 import guru.sfg.beer.order.service.services.beer.BeerServiceImpl;
 import guru.sfg.brewery.model.BeerDto;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,6 +29,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
 class BeerOrderManagerImplIT {
@@ -70,14 +72,27 @@ class BeerOrderManagerImplIT {
         BeerOrder savedBeerOrder = beerOrderManager.newBeerOrder(beerOrder);
 
         await().untilAsserted( () -> {
-            BeerOrder found = beerOrderRepository.findById(savedBeerOrder.getId()).get();
+            BeerOrder foundOrder = beerOrderRepository.findById(beerOrder.getId()).get();
 
-            assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, found.getOrderStatus());
+            assertEquals(BeerOrderStatusEnum.ALLOCATED, foundOrder.getOrderStatus());
+        });
+
+        await().untilAsserted(() -> {
+            BeerOrder foundOrder = beerOrderRepository.findById(beerOrder.getId()).get();
+            BeerOrderLine line = foundOrder.getBeerOrderLines().iterator().next();
+            log.warn("### Order Quantity {} - QuantityAllocated {}", line.getOrderQuantity(), line.getQuantityAllocated());
+            assertEquals(line.getOrderQuantity(), line.getQuantityAllocated());
+        });
+
+        BeerOrder savedBeerOrder2 = beerOrderRepository.findById(savedBeerOrder.getId()).get();
+
+        assertNotNull(savedBeerOrder2);
+        assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder2.getOrderStatus());
+        savedBeerOrder2.getBeerOrderLines().forEach(line -> {
+            assertEquals(line.getOrderQuantity(), line.getQuantityAllocated());
         });
 
         wireMock.verify(2, getRequestedFor( urlEqualTo(BeerServiceImpl.BEER_BY_UPC_SERVICE_PATH+UPC) ));
-        assertNotNull(savedBeerOrder);
-        assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder.getOrderStatus());
     }
 
     BeerOrder createBeerOrder() {
