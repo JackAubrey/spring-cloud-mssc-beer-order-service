@@ -32,12 +32,13 @@ public class AllocateOrderAction extends AbstractActionSupport {
         String orderId = Optional.ofNullable((String)stateContext.getMessage().getHeaders().get(BeerOrderManager.ORDER_ID_HEADER))
                         .orElseThrow( () -> new IllegalArgumentException("No Order ID header found on message context"));
         log.debug("ALLOCATE ORDER ACTION | Retrieving BeerOrderId {}", orderId);
-        BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
-
-        AllocateBeerOrderRequest request = AllocateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
-        log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
-        jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_QUEUE, request);
-        log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+        beerOrderRepository.findById(UUID.fromString(orderId))
+                .ifPresentOrElse(beerOrder -> {
+                    AllocateBeerOrderRequest request = AllocateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
+                    log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
+                    jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_QUEUE, request);
+                    log.debug("ALLOCATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+                }, () -> log.error("Order Not Found. Id {} ", orderId));
 
         log.debug("ALLOCATE ORDER ACTION | END");
     }

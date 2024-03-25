@@ -31,12 +31,13 @@ public class ValidateOrderAction extends AbstractActionSupport {
         String orderId = Optional.ofNullable((String)stateContext.getMessage().getHeaders().get(BeerOrderManager.ORDER_ID_HEADER))
                         .orElseThrow( () -> new IllegalArgumentException("No Order ID header found on message context"));
         log.debug("VALIDATE ORDER ACTION | Retrieving BeerOrderId {}", orderId);
-        BeerOrder beerOrder = beerOrderRepository.getReferenceById(UUID.fromString(orderId));
-
-        ValidateBeerOrderRequest request = ValidateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
-        log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
-        jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_QUEUE, request);
-        log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+        beerOrderRepository.findById(UUID.fromString(orderId))
+                .ifPresentOrElse(beerOrder -> {
+                    ValidateBeerOrderRequest request = ValidateBeerOrderRequest.builder().beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder)).build();
+                    log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Sending request {}", orderId, request);
+                    jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_QUEUE, request);
+                    log.debug("VALIDATE ORDER ACTION | On StateMachine Complete for BeerOrderId {} | Request Sent", orderId);
+                }, () -> log.error("Order Not Found. Id {} ", orderId));
 
         log.debug("VALIDATE ORDER ACTION | END");
     }
