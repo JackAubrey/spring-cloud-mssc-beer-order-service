@@ -2,10 +2,7 @@ package guru.sfg.beer.order.service.sm;
 
 import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
-import guru.sfg.beer.order.service.sm.actions.AllocateOrderAction;
-import guru.sfg.beer.order.service.sm.actions.AllocationFailureAction;
-import guru.sfg.beer.order.service.sm.actions.ValidateOrderAction;
-import guru.sfg.beer.order.service.sm.actions.ValidationFailureAction;
+import guru.sfg.beer.order.service.sm.actions.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +26,7 @@ public class BeerOrderStateMachineConfig extends StateMachineConfigurerAdapter<B
     private final AllocateOrderAction allocateOrderAction;
     private final ValidationFailureAction validationFailureAction;
     private final AllocationFailureAction allocationFailureAction;
+    private final DeallocateOrderAction deallocateOrderAction;
 
     @Override
     public void configure(StateMachineStateConfigurer<BeerOrderStatusEnum, BeerOrderEventEnum> states) throws Exception {
@@ -84,7 +82,8 @@ public class BeerOrderStateMachineConfig extends StateMachineConfigurerAdapter<B
                 .event(BeerOrderEventEnum.BEER_ORDER_PICKED_UP)
             .and().withExternal()
                 .source(BeerOrderStatusEnum.ALLOCATED).target(BeerOrderStatusEnum.CANCELLED)
-                .event(BeerOrderEventEnum.CANCEL_ORDER);
+                .event(BeerOrderEventEnum.CANCEL_ORDER)
+                .action(deallocateOrderAction);
     }
 
     @Override
