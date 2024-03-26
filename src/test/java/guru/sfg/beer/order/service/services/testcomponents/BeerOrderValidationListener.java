@@ -18,11 +18,18 @@ public class BeerOrderValidationListener {
     void listen(ValidateBeerOrderRequest request) {
         log.info("Received Validation Order Request: {}", request);
         boolean isValid = !TestConstants.FAIL_VALIDATION.equals(request.getBeerOrderDto().getCustomerRef());
+        boolean sendResponse = true;
 
-        jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE,
-                ValidateBeerOrderResult.builder()
-                        .isValid(isValid)
-                        .orderId(request.getBeerOrderDto().getId())
-                        .build());
+        if(TestConstants.DO_NOT_VALIDATE.equals(request.getBeerOrderDto().getCustomerRef())) {
+            sendResponse = false;
+        }
+
+        if(sendResponse) {
+            jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE,
+                    ValidateBeerOrderResult.builder()
+                            .isValid(isValid)
+                            .orderId(request.getBeerOrderDto().getId())
+                            .build());
+        }
     }
 }
