@@ -43,12 +43,41 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         return savedBeerOrder;
     }
 
+    private Optional<BeerOrder> findWithRetry(UUID beerOrderId) {
+        AtomicBoolean found = new AtomicBoolean(false);
+        AtomicInteger loopCount = new AtomicInteger(0);
+        Optional<BeerOrder> optionalBeerOrder = Optional.empty();
+        log.debug("START find Order {}", beerOrderId);
+
+        while (!found.get()) {
+            if (loopCount.incrementAndGet() > 10) {
+                found.set(true);
+                log.debug("Find Order | Loop Retries exceeded for OrderId {}", beerOrderId);
+            } else {
+                optionalBeerOrder = beerOrderRepository.findById(beerOrderId);
+                found.set(optionalBeerOrder.isPresent());
+
+                if (!found.get()) {
+                    try {
+                        log.debug("Find Order | Sleeping for retry");
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                        // do nothing
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+
+        return optionalBeerOrder;
+    }
+
     @Transactional
     @Override
     public void processValidationResult(UUID beerOrderId, Boolean isValid) {
         log.debug("Process Validation Result for beerOrderId: {}", beerOrderId + " Valid? " + isValid);
 
-        beerOrderRepository.findById(beerOrderId)
+        findWithRetry(beerOrderId)
                 .ifPresentOrElse(beerOrder -> {
                     if( Boolean.TRUE.equals(isValid) ) {
                         sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_SUCCESS);
@@ -56,7 +85,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                         //wait for status change
                         awaitForStatus(beerOrderId, BeerOrderStatusEnum.VALIDATED);
 
-                        beerOrderRepository.findById(beerOrderId)
+                        findWithRetry(beerOrderId)
                                 .ifPresentOrElse(validatedOrder -> sendBeerOrderEvent(validatedOrder, BeerOrderEventEnum.ALLOCATE_ORDER),
                                         () -> log.error("Process Validation Result | Send BeerOrder Event | "+ORDER_NOT_FOUND_ID, beerOrderId));
                     } else {
@@ -67,7 +96,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     @Override
     public void beerOrderAllocationPassed(BeerOrderDto beerOrderDto) {
-        Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(beerOrderDto.getId());
+        Optional<BeerOrder> beerOrderOptional = findWithRetry(beerOrderDto.getId());
 
         beerOrderOptional.ifPresentOrElse(beerOrder -> {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
@@ -78,7 +107,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     @Override
     public void beerOrderAllocationPendingInventory(BeerOrderDto beerOrderDto) {
-        Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(beerOrderDto.getId());
+        Optional<BeerOrder> beerOrderOptional = findWithRetry(beerOrderDto.getId());
 
         beerOrderOptional.ifPresentOrElse(beerOrder -> {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
@@ -89,7 +118,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     }
 
     private void updateAllocatedQty(BeerOrderDto beerOrderDto) {
-        Optional<BeerOrder> allocatedOrderOptional = beerOrderRepository.findById(beerOrderDto.getId());
+        Optional<BeerOrder> allocatedOrderOptional = findWithRetry(beerOrderDto.getId());
 
         allocatedOrderOptional.ifPresentOrElse(allocatedOrder -> {
             allocatedOrder.getBeerOrderLines().forEach(beerOrderLine -> beerOrderDto.getBeerOrderLines().forEach(beerOrderLineDto -> {
@@ -104,7 +133,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     @Override
     public void beerOrderAllocationFailed(BeerOrderDto beerOrderDto) {
-        Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(beerOrderDto.getId());
+        Optional<BeerOrder> beerOrderOptional = findWithRetry(beerOrderDto.getId());
 
         beerOrderOptional.ifPresentOrElse(beerOrder ->
                         sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED),
@@ -114,7 +143,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     @Override
     public void beerOrderPickedUp(UUID id) {
-        Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(id);
+        Optional<BeerOrder> beerOrderOptional = findWithRetry(id);
 
         beerOrderOptional.ifPresentOrElse(beerOrder ->
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.BEER_ORDER_PICKED_UP),
@@ -123,7 +152,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
     @Override
     public void cancelOrder(UUID id) {
-        beerOrderRepository.findById(id).ifPresentOrElse(beerOrder ->
+        findWithRetry(id).ifPresentOrElse(beerOrder ->
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.CANCEL_ORDER),
             () -> log.error("Cancel Order | " + ORDER_NOT_FOUND_ID, id));
     }
