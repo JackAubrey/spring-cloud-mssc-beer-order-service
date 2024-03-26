@@ -62,7 +62,7 @@ class BeerOrderManagerImplIT {
 
     @BeforeEach
     void setUp() {
-        testCustomer = customerRepository.save( Customer.builder()
+        testCustomer = customerRepository.saveAndFlush( Customer.builder()
                 .customerName("Test Customer")
                 .build() );
     }
