@@ -41,30 +41,35 @@ public class BeerOrderStateChangeInterceptor extends StateMachineInterceptorAdap
                                         BeerOrder saveOrder = beerOrderRepository.saveAndFlush(beerOrder);
                                         log.debug("Saved and Flushed beer-order {} with state {}", saveOrder.getId(), state.getId());
 
-                                        findWithRetry(saveOrder.getId()).ifPresentOrElse(b -> log.info("OK saved order {}", b.getId()),
-                                                () -> log.error("Unable to read the saved order {}", saveOrder.getId()));
+                                        awaitForStatus(saveOrder.getId(), state.getId());
                                     }, () -> log.error("Unable to load BeerOrder by Id {}", orderId));
 
                         });
     }
 
-    private Optional<BeerOrder> findWithRetry(UUID beerOrderId) {
+    private void awaitForStatus(UUID beerOrderId, BeerOrderStatusEnum statusEnum) {
+
         AtomicBoolean found = new AtomicBoolean(false);
         AtomicInteger loopCount = new AtomicInteger(0);
-        Optional<BeerOrder> optionalBeerOrder = Optional.empty();
-        log.debug("START find Order {}", beerOrderId);
+        log.debug("INTERCEPTOR | START Awaiting Order {} with Status {}", beerOrderId, statusEnum);
 
         while (!found.get()) {
             if (loopCount.incrementAndGet() > 10) {
                 found.set(true);
-                log.debug("Find Order | Loop Retries exceeded for OrderId {}", beerOrderId);
+                log.debug("INTERCEPTOR | Loop Retries exceeded");
             } else {
-                optionalBeerOrder = beerOrderRepository.findById(beerOrderId);
-                found.set(optionalBeerOrder.isPresent());
+                beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
+                    if (beerOrder.getOrderStatus().equals(statusEnum)) {
+                        found.set(true);
+                        log.debug("INTERCEPTOR | Order Found");
+                    } else {
+                        log.debug("INTERCEPTOR | Order Status Not Equal. Expected: " + statusEnum.name() + " Found: " + beerOrder.getOrderStatus().name());
+                    }
+                }, () -> log.debug("INTERCEPTOR | Order Id Not Found"));
 
                 if (!found.get()) {
                     try {
-                        log.debug("Find Order | Sleeping for retry");
+                        log.debug("INTERCEPTOR | Sleeping for retry");
                         Thread.sleep(100);
                     } catch (Exception e) {
                         // do nothing
@@ -74,6 +79,6 @@ public class BeerOrderStateChangeInterceptor extends StateMachineInterceptorAdap
             }
         }
 
-        return optionalBeerOrder;
+        log.debug("INTERCEPTOR | END Awaiting Order {} with Status {}", beerOrderId, statusEnum);
     }
 }

@@ -203,7 +203,8 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                 .setHeader(ORDER_ID_HEADER, beerOrder.getId().toString())
                 .build();
 
-        sm.sendEvent(Mono.just(msg)).subscribe(c -> log.debug("State Machine SendEvent Consume"), e -> log.error("State Machine SendEvent Consume Error:", e));
+        sm.sendEvent(Mono.just(msg)).subscribe(c -> log.debug("State Machine SendEvent BeerOrder ID {} and event {}", beerOrder.getId(), event),
+                e -> log.error("State Machine SendEvent Error BeerOrder ID {} and event {}", beerOrder.getId(), event, e));
     }
 
     private StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> build(BeerOrder beerOrder) {
