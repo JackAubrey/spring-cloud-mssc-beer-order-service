@@ -13,6 +13,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>mssc-beer-order-service</name>
     <description>MSSC Beer Order Service</description>
+    <properties>
+        <zipkin.version>3.3.0</zipkin.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.statemachine</groupId>
@@ -27,6 +31,49 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
+
+        <!-- Needed to SpringBoot 3 Distributed Tracing. -->
+        <!-- SpringBoot 3 doesn't work with Sleuth anymore -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+            <version>${zipkin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-amqp-client</artifactId>
+            <version>${zipkin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-activemq-client</artifactId>
+            <version>${zipkin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- LogStash is used to grab logs and moving somewhere in order to consolidate those -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+        <!-- END to SpringBoot 3 Distributed Tracing. -->
+
         <!-- https://mvnrepository.com/artifact/org.wiremock/wiremock-standalone -->
         <dependency>
             <groupId>org.wiremock</groupId>
