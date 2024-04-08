@@ -6,7 +6,7 @@
     <parent>
         <groupId>guru.springframework</groupId>
         <artifactId>mssc-brewery-bom</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>mssc-beer-order-service</artifactId>
@@ -20,44 +20,6 @@
             <artifactId>spring-statemachine-core</artifactId>
             <version>4.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
-
-        <!-- Needed to SpringBoot 3 Distributed Tracing. -->
-        <!-- SpringBoot 3 doesn't work with Sleuth anymore -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-reporter-brave</artifactId>
-        </dependency>
-
-        <!-- Logstash is a log pipeline tool that accepts inputs from various sources -->
-        <!-- executes different transformations, and exports the data to various targets. -->
-        <!-- It is a dynamic data collection pipeline with an extensible plugin ecosystem -->
-        <dependency>
-            <groupId>net.logstash.logback</groupId>
-            <artifactId>logstash-logback-encoder</artifactId>
-            <version>7.4</version>
-        </dependency>
-        <!-- END to SpringBoot 3 Distributed Tracing. -->
 
         <!-- https://mvnrepository.com/artifact/org.wiremock/wiremock-standalone -->
         <dependency>
