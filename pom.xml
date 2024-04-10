@@ -6,7 +6,7 @@
     <parent>
         <groupId>guru.springframework</groupId>
         <artifactId>mssc-brewery-bom</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.11</version>
     </parent>
 
     <artifactId>mssc-beer-order-service</artifactId>
