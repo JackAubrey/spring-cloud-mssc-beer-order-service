@@ -6,7 +6,7 @@
     <parent>
         <groupId>guru.springframework</groupId>
         <artifactId>mssc-brewery-bom</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.4</version>
     </parent>
 
     <artifactId>mssc-beer-order-service</artifactId>
@@ -45,4 +45,14 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/JackAubrey/*</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
