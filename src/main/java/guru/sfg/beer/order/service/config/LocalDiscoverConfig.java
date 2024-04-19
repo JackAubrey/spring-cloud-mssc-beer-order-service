@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Slf4j
-@Profile("local-discovery")
+@Profile("cloud-local")
 @EnableDiscoveryClient
 @Configuration
 public class LocalDiscoverConfig {
