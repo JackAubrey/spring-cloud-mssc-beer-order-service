@@ -7,6 +7,8 @@ FROM openjdk:17.0.2-jdk-slim
 LABEL PROJECT_NAME=${project.artifactId} \
       PROJECT=${project.id}
 
+RUN apt-get -y update; apt-get -y install curl
+
 EXPOSE 8080
 
 WORKDIR application
@@ -14,4 +16,4 @@ COPY --from=builder application/dependencies/ ./
 COPY --from=builder application/spring-boot-loader/ ./
 COPY --from=builder application/snapshot-dependencies/ ./
 COPY --from=builder application/application/ ./
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "org.springframework.boot.loader.launch.JarLauncher"]
