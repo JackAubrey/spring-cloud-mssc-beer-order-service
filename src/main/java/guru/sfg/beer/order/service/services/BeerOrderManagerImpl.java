@@ -48,19 +48,22 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         AtomicInteger loopCount = new AtomicInteger(0);
         Optional<BeerOrder> optionalBeerOrder = Optional.empty();
         log.debug("START find Order {}", beerOrderId);
+        long wait = 100;
+        double multiplier = 1.5;
 
         while (!found.get()) {
-            if (loopCount.incrementAndGet() > 10) {
+            if (loopCount.incrementAndGet() > 20) {
                 found.set(true);
                 log.debug("Find Order | Loop Retries exceeded for OrderId {}", beerOrderId);
             } else {
-                optionalBeerOrder = beerOrderRepository.findById(beerOrderId);
+                optionalBeerOrder = Optional.ofNullable(beerOrderRepository.getReferenceById(beerOrderId));
                 found.set(optionalBeerOrder.isPresent());
 
                 if (!found.get()) {
                     try {
                         log.debug("Find Order | Sleeping for retry");
-                        Thread.sleep(100);
+                        Thread.sleep(wait);
+                        wait *= multiplier;
                     } catch (Exception e) {
                         // do nothing
                         Thread.currentThread().interrupt();
@@ -174,7 +177,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                 log.debug("Loop Retries exceeded");
             }
 
-            beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
+            Optional.ofNullable(beerOrderRepository.getReferenceById(beerOrderId)).ifPresentOrElse(beerOrder -> {
                 if (beerOrder.getOrderStatus().equals(statusEnum)) {
                     found.set(true);
                     log.debug("Order Found");
