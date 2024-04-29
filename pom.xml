@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>mssc-beer-order-service</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6-SNAPSHOT</version>
     <name>mssc-beer-order-service</name>
     <description>MSSC Beer Order Service</description>
 
@@ -75,6 +75,6 @@
         <connection>scm:git:git@github.com:JackAubrey/${project.repo-name}.git</connection>
         <developerConnection>scm:git:git@github.com:JackAubrey/${project.repo-name}.git</developerConnection>
         <url>https://github.com/JackAubrey/${project.repo-name}</url>
-        <tag>1.0.5</tag>
+        <tag>HEAD</tag>
     </scm>
 </project>
