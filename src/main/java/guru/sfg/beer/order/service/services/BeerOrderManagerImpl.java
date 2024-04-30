@@ -34,12 +34,13 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     @Transactional
     @Override
     public BeerOrder newBeerOrder(BeerOrder beerOrder) {
-        log.info("Saving new BeerOrder");
+        log.debug("Saving new BeerOrder");
         beerOrder.setId(null);
         beerOrder.setOrderStatus(BeerOrderStatusEnum.NEW);
 
         BeerOrder savedBeerOrder = beerOrderRepository.saveAndFlush(beerOrder);
-        sendBeerOrderEvent(savedBeerOrder, BeerOrderEventEnum.VALIDATE_ORDER);
+        log.info("New BeerOrder ID {}", savedBeerOrder.getId());
+        sendBeerOrderEvent( savedBeerOrder, BeerOrderEventEnum.VALIDATE_ORDER);
         return savedBeerOrder;
     }
 
@@ -56,13 +57,13 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                 found.set(true);
                 log.debug("Find Order | Loop Retries exceeded for OrderId {}", beerOrderId);
             } else {
-                optionalBeerOrder = Optional.ofNullable(beerOrderRepository.getReferenceById(beerOrderId));
+                optionalBeerOrder = beerOrderRepository.findById(beerOrderId);
                 found.set(optionalBeerOrder.isPresent());
 
                 if (!found.get()) {
                     try {
                         log.debug("Find Order | Sleeping for retry");
-                        Thread.sleep(wait);
+                        Thread.sleep( (int) wait);
                         wait *= multiplier;
                     } catch (Exception e) {
                         // do nothing
@@ -78,7 +79,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     @Transactional
     @Override
     public void processValidationResult(UUID beerOrderId, Boolean isValid) {
-        log.debug("Process Validation Result for beerOrderId: {}", beerOrderId + " Valid? " + isValid);
+        log.info("Process Validation Result for beerOrderId: {}", beerOrderId + " Valid? " + isValid);
 
         findWithRetry(beerOrderId)
                 .ifPresentOrElse(beerOrder -> {
@@ -172,12 +173,12 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         log.debug("START Awaiting Order {} with Status {}", beerOrderId, statusEnum);
 
         while (!found.get()) {
-            if (loopCount.incrementAndGet() > 10) {
+            if (loopCount.incrementAndGet() > 20) {
                 found.set(true);
                 log.debug("Loop Retries exceeded");
             }
 
-            Optional.ofNullable(beerOrderRepository.getReferenceById(beerOrderId)).ifPresentOrElse(beerOrder -> {
+            beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
                 if (beerOrder.getOrderStatus().equals(statusEnum)) {
                     found.set(true);
                     log.debug("Order Found");
@@ -189,7 +190,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             if (!found.get()) {
                 try {
                     log.debug("Sleeping for retry");
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (Exception e) {
                     // do nothing
                     Thread.currentThread().interrupt();
@@ -206,7 +207,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
                 .setHeader(ORDER_ID_HEADER, beerOrder.getId().toString())
                 .build();
 
-        sm.sendEvent(Mono.just(msg)).subscribe(c -> log.debug("State Machine SendEvent BeerOrder ID {} and event {}", beerOrder.getId(), event),
+        sm.sendEvent(Mono.just(msg)).subscribe(c -> log.info("State Machine SendEvent BeerOrder ID {} and event {}", beerOrder.getId(), event),
                 e -> log.error("State Machine SendEvent Error BeerOrder ID {} and event {}", beerOrder.getId(), event, e));
     }
 
