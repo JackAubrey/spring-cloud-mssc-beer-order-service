@@ -35,7 +35,7 @@ public class BeerOrderAllocationListener {
         });
 
         if(sendResponse) {
-            jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_RESPONSE_QUEUE,
+            jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_RESULT_QUEUE,
                     AllocateBeerOrderResult.builder()
                             .beerOrderDto(request.getBeerOrderDto())
                             .pendingInventory(pendingInventory)

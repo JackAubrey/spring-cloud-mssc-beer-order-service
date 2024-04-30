@@ -6,7 +6,7 @@ import guru.sfg.brewery.model.events.ValidateBeerOrderResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -18,10 +18,12 @@ public class ValidationResultListener {
     private final BeerOrderManager beerOrderManager;
 
     @JmsListener(destination = JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE)
-    void listen(@Payload ValidateBeerOrderResult result) {
+    void listen(Message<ValidateBeerOrderResult> message) {
+        log.debug("Received Message {}", message);
+        final ValidateBeerOrderResult result = message.getPayload();
         final UUID beerOrderId = result.getOrderId();
 
-        log.debug("Received Validation Order Result {}", result);
+        log.info("Received Validation Order Result {}", result);
         beerOrderManager.processValidationResult(beerOrderId, result.getIsValid());
     }
 }

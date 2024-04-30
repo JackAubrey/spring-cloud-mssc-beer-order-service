@@ -6,6 +6,7 @@ import guru.sfg.brewery.model.events.AllocateBeerOrderResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,8 +18,9 @@ import org.springframework.stereotype.Component;
 public class BeerOrderAllocationResultListener {
     private final BeerOrderManager beerOrderManager;
 
-    @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_RESPONSE_QUEUE)
-    public void listen(AllocateBeerOrderResult result){
+    @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_RESULT_QUEUE)
+    public void listen(Message<AllocateBeerOrderResult> message){
+        AllocateBeerOrderResult result = message.getPayload();
         if(!result.getAllocationError() && !result.getPendingInventory()){
             //allocated normally
             beerOrderManager.beerOrderAllocationPassed(result.getBeerOrderDto());
